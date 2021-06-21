@@ -185,6 +185,35 @@ This will start a **local** GraphQL API and will also serve the GraphQL Playgrou
 
 ## EXERCISE: Exploring the Movies GraphQL API
 
+To familiarize yourself with GraphQL and writing GraphQL queries, open the public movies GraphQL API at [https://movies.neo4j-graphql.com](https://movies.neo4j-graphql.com)
+
+Explore GraphQL Playground by executing the following queries, and opening the Docs and Schema tab to see the type definitions.
+
+Modify the queries by adding additional fields in the selection set and see how the results change.
+
+```gql
+{
+  movies(options: { limit: 10 }) {
+    title
+    actors {
+      name
+    }
+  }
+}
+```
+
+```gql
+{
+  directors(where: { name: "Robert Redford" }) {
+    name
+    directed {
+      title
+      plot
+    }
+  }
+}
+```
+
 ## Check Your Understanding
 
 ## Summary
