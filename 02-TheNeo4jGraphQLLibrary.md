@@ -377,6 +377,340 @@ Now that we have some data loaded and we’ve reviewed how to add data using Gra
 
 ## Querying Data with GraphQL
 
+We will review some examples now using the data we just loaded above, refer to the [Neo4j GraphQL Library documentation](https://neo4j.com/docs/graphql-manual/current/schema/queries/) for more information and examples.
+
+### GraphQL Query Fields
+
+By default, each type defined in the GraphQL type definitions will have a GraphQL Query field generated and added to the Query type as the pluralized name of the type (for example the type `Movie` becomes a Query field `movies`). Each query field is an entry point into the GraphQL API. Since GraphQL types are mapped to node labels in Neo4j, you can think of the Query field as the starting point for a traversal through the graph.
+
+Let’s start with an example, querying for all books and their titles.
+
+```gql
+{
+  books {
+    title
+  }
+}
+```
+
+If we loaded our sample data correctly we will see the following result:
+
+```json
+{
+  "data": {
+    "books": [
+      {
+        "title": "Graph Algorithms"
+      },
+      {
+        "title": "Inspired"
+      },
+      {
+        "title": "Ross Poldark"
+      }
+    ]
+  }
+}
+```
+
+The response data matches the shape of our GraphQL query - as we add more fields to the GraphQL selection set those fields are included in the response object. This query:
+
+```gql
+{
+  books {
+    title
+    description
+    price
+  }
+}
+```
+
+produces the following result:
+
+```json
+{
+  "data": {
+    "books": [
+      {
+        "title": "Graph Algorithms",
+        "description": "Practical Examples in Apache Spark and Neo4j",
+        "price": 37.48
+      },
+      {
+        "title": "Inspired",
+        "description": "How to Create Tech Products Customers Love",
+        "price": 21.38
+      },
+      {
+        "title": "Ross Poldark",
+        "description": "Ross Poldark is the first novel in Winston Graham's sweeping saga of Cornish life in the eighteenth century.",
+        "price": 15.52
+      }
+    ]
+  }
+}
+```
+
+Traversals through the graph are expressed by adding nested fields to the GraphQL selection set.
+
+```gql
+{
+  books {
+    title
+    reviews {
+      rating
+      text
+      author {
+        username
+      }
+    }
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "books": [
+      {
+        "title": "Graph Algorithms",
+        "reviews": [
+          {
+            "rating": 5,
+            "text": "Best overview of graph data science!",
+            "author": {
+              "username": "EmilEifrem7474"
+            }
+          }
+        ]
+      },
+      {
+        "title": "Inspired",
+        "reviews": []
+      },
+      {
+        "title": "Ross Poldark",
+        "reviews": [
+          {
+            "rating": 4,
+            "text": "Beautiful depiction of Cornwall.",
+            "author": {
+              "username": "BookLover123"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Each generated Query field accepts two arguments `where` and `options`. The `where` argument is used to specify filtering arguments while `options` is used for sorting and pagination.
+
+Let’s cover sorting and pagination first.
+
+### Sorting and Pagination
+
+A sorting input type is generated for each type in the GraphQL type definitions, allowing for Query results to be sorted by each field using the `options` field argument.
+
+```gql
+{
+  books(options: { sort: { price: DESC } }) {
+    title
+    price
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "books": [
+      {
+        "title": "Graph Algorithms",
+        "price": 37.48
+      },
+      {
+        "title": "Inspired",
+        "price": 21.38
+      },
+      {
+        "title": "Ross Poldark",
+        "price": 15.52
+      }
+    ]
+  }
+}
+```
+
+We can also sort in ascending order and pass multiple sort input objects to order by multiple fields. See the [documentation](https://neo4j.com/docs/graphql-manual/current/schema/sorting/) for more information.
+
+Page-based pagination is available by passing `skip` and `limit` values as part of the options argument. For example:
+
+```gql
+{
+  books(options: { sort: { price: DESC }, limit: 1, skip: 0 }) {
+    title
+    price
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "books": [
+      {
+        "title": "Graph Algorithms",
+        "price": 37.48
+      }
+    ]
+  }
+}
+```
+
+See the [documentation](https://neo4j.com/docs/graphql-manual/current/schema/pagination/) for more information.
+
+### Filtering
+
+Query results can be filtered using the where argument. Filter inputs are generated for each field and expose comparison operators specific to the type of the field. For example, for numeric fields filter input operators include equality, greater than (\_GT), less than (\_LT), etc. String fields expose the common string comparison operators such as \_STARTS_WITH, \_CONTAINS, \_ENDS_WITH, etc.
+
+Let’s search for all books where the price is less than 20.00:
+
+```gql
+{
+  books(where: { price_LT: 20.00 }) {
+    title
+    price
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "books": [
+      {
+        "title": "Ross Poldark",
+        "price": 15.52
+      }
+    ]
+  }
+}
+```
+
+For `Point` fields we can filter results by the distance to another point. Here we **search for addresses within 1km of a specified point**:
+
+```gql
+{
+  addresses(
+    where: {
+      location_LT: {
+        distance: 1000
+        point: { latitude: 37.56169133066, longitude: -122.3232480481 }
+      }
+    }
+  ) {
+    address
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "addresses": [
+      {
+        "address": "111 E 5th Ave, San Mateo, CA 94401"
+      }
+    ]
+  }
+}
+```
+
+We can also use the `where` argument in nested selections to filter relationships. Here we are filtering for reviews created after Jan 1, 2021 using the `createdAt_GT` filter input on the `createdAt` DateTime type, specifying the date using the ISO format.
+
+```gql
+{
+  books(where: { price_LT: 20.00 }) {
+    title
+    price
+    reviews(where: { createdAt_GT: "2021-01-01" }) {
+      text
+      rating
+    }
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "books": [
+      {
+        "title": "Ross Poldark",
+        "price": 15.52,
+        "reviews": [
+          {
+            "text": "Beautiful depiction of Cornwall.",
+            "rating": 4
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Note that the **filters are applied at the level of the selection where the filter is used**. So in the above example, **all books with a price less than 20.00 will be returned**, regardless of the reviews connected to the book.
+
+Let’s look at an example that applies filtering at the root of our query, but using a relationship. Let’s say we want to search for all orders where the shipTo address is within 1km of a certain point. To do that we’ll use the `where` argument at the root of the query (in the `orders` Query field), but use a nested input to specify we want to filter using the `shipTo` relationship and the corresponding `Address` node.
+
+```gql
+{
+  orders(
+    where: {
+      shipTo: {
+        location_LT: {
+          distance: 1000
+          point: { latitude: 37.56169133066, longitude: -122.3232480481 }
+        }
+      }
+    }
+  ) {
+    orderID
+    customer {
+      username
+    }
+    books {
+      title
+    }
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "orders": [
+      {
+        "orderID": "0dcec1f2-bc3d-4224-83df-5acef6807bd8",
+        "customer": {
+          "username": "EmilEifrem7474"
+        },
+        "books": [
+          {
+            "title": "Graph Algorithms"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+For more information and examples see the [filtering section in the Neo4j GraphQL Library documentation](https://neo4j.com/docs/graphql-manual/current/schema/filtering/).
+
 ## EXERCISE: Updating the GraphQL Schema
 
 ## Check Your Understanding
