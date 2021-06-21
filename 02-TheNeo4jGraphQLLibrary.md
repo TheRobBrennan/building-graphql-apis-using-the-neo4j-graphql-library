@@ -838,4 +838,38 @@ mutation {
 
 ## Check Your Understanding
 
+### Question 1
+
+When creating GraphQL type definitions using the Neo4j GraphQL Library the `@relationship` directive is used to define relationships.
+
+Is the above statement true or false?
+
+[X] True
+[] False
+
+### Question 2
+
+For the GraphQL schema we created in this lesson, which of the follow GraphQL mutations would create an address for an already existing order?
+
+Select the correct answer.
+
+[X] `mutation { createAddresses( input: { address: "111 E 5th Ave, San Mateo, CA 94401" order: { connect: { where: { orderID: "123" } } } } ) { addresses { address } } }`
+
+[] `mutation { createAddresses( input: { address: "111 E 5th Ave, San Mateo, CA 94401" order: { create: { books: { connect: { where: { title: "Graph Algorithms" } } } } } } ) { addresses { address } } }`
+
+[] `CREATE (a:Address {address: "111 E 5th Ave, San Mateo, CA 94401"}) MATCH (o:Order {orderID: "123"}) CREATE (a)←[:SHIPS_TO]-(o)`
+
+### Question 3
+
+Filter inputs are generated for the following types when using the Neo4j GraphQL Library:
+
+Select all correct answers.
+
+[X] DateTime
+[X] Point
+[X] String
+[X] Int
+
 ## Summary
+
+In this lesson, we saw how to use GraphQL type definitions to generate a GraphQL API using the Neo4j GraphQL Library. In the next lesson we explore adding custom logic to our GraphQL API using the Cypher query language.
