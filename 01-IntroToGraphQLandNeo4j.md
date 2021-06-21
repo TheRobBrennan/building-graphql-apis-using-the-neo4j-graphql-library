@@ -216,4 +216,41 @@ Modify the queries by adding additional fields in the selection set and see how 
 
 ## Check Your Understanding
 
+### Question 1
+
+The n+1 query problem is a common problem developers face when building GraphQL APIs and can lead to poor performance if not properly addressed.
+
+Is this statement true or false?
+
+[ X ] True
+[] False
+
+### Question 2
+
+What is the name of the browser-based GraphQL IDE for executing GraphQL operations and exploring GraphQL API documentation?
+
+Select the correct answer.
+
+[X] GraphQL Playground
+[] Neo4j Browser
+[]GraphQL Sunshine Beam
+
+### Question 3
+
+What is the term for the list of fields that define the information to be returned by a GraphQL operation?
+
+Select the correct answer.
+
+[] GraphQL type definitions
+
+[] GraphQL SDL
+
+[] query field
+
+[] field arguments
+
+[X] selection set
+
 ## Summary
+
+In this lesson, we introduced GraphQL and the features of the Neo4j GraphQL Library. In the next lesson we get started using the Neo4j GraphQL Library to build a GraphQL API backed by Neo4j.
