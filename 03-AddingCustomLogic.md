@@ -226,6 +226,188 @@ extend type Order {
 }
 ```
 
+### Node And Object Fields
+
+In addition to scalar fields we can also use `@cypher` directive fields on object and object array fields with Cypher queries that return nodes or objects. Let’s add a `recommended` field to the `Customer` type, returning books the customer might be interested in purchasing based on their order history and the order history of other customers in the graph.
+
+Add this extension to the schema.graphql file:
+
+```gql
+# schema.graphql
+
+extend type Customer {
+  recommended: [Book]
+    @cypher(
+      statement: """
+      MATCH (this)-[:PLACED]->(:Order)-[:CONTAINS]->(:Book)<-[:CONTAINS]-(:Order)<-[:PLACED]-(c:Customer)
+      MATCH (c)-[:PLACED]->(:Order)-[:CONTAINS]->(rec:Book)
+      WHERE NOT EXISTS((this)-[:PLACED]->(:Order)-[:CONTAINS]->(rec))
+      RETURN rec
+      """
+    )
+}
+```
+
+Now we can use this `recommended` field on the `Customer` type. Since `recommended` is an array of `Book` objects we need to select the nested fields we want to be returned - in this case the `title` field.
+
+```gql
+{
+  customers {
+    username
+    recommended {
+      title
+    }
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "customers": [
+      {
+        "username": "EmilEifrem7474",
+        "recommended": [
+          {
+            "title": "Inspired"
+          },
+          {
+            "title": "Ross Poldark"
+          }
+        ]
+      },
+      {
+        "username": "BookLover123",
+        "recommended": []
+      }
+    ]
+  }
+}
+```
+
+In this case we recommend two books to Emil that he hasn’t purchased, however since BookLover123 has already purchased every book in our inventory we don’t have any recommendations for them!
+
+Any field arguments declared on a GraphQL field with a Cypher directive are passed through to the Cypher query as Cypher parameters. Let’s say we want the client to be able to specify the number of recommendations returned. We’ll add a field argument `limit` to the `recommended` field and reference that in our Cypher query as a Cypher parameter.
+
+Modify this extension in the schema.graphql file:
+
+```gql
+# schema.graphql
+
+extend type Customer {
+  recommended(limit: Int = 3): [Book]
+    @cypher(
+      statement: """
+      MATCH (this)-[:PLACED]->(:Order)-[:CONTAINS]->(:Book)<-[:CONTAINS]-(:Order)<-[:PLACED]-(c:Customer)
+      MATCH (c)-[:PLACED]->(:Order)-[:CONTAINS]->(rec:Book)
+      WHERE NOT EXISTS((this)-[:PLACED]->(:Order)-[:CONTAINS]->(rec))
+      RETURN rec LIMIT $limit
+      """
+    )
+}
+```
+
+We set a default value of 3 for this `limit` argument so that if the value isn’t specified the `limit` Cypher parameter will still be passed to the Cypher query with a value of 3. The client can now specify the number of recommended books to return:
+
+```gql
+{
+  customers {
+    username
+    recommended(limit: 1) {
+      title
+    }
+  }
+}
+```
+
+We can also return a map from our Cypher query when using the `@cypher` directive on an object or object array GraphQL field. This is useful when we have multiple computed values we want to return or for returning data from an external data layer. Let’s add weather data for the order addresses so our delivery drivers know what sort of conditions to expect. We’ll query an external API to fetch this data using the [apoc.load.json](https://neo4j.com/labs/apoc/4.2/import/load-json/) procedure.
+
+First, we’ll add a type to the GraphQL type definitions to represent this object (`Weather`), then we’ll use the `apoc.load.json` procedure to fetch data from an external API and return the current conditions, returning a map from our Cypher query that matches the shape of the `Weather` type.
+
+Add these types and extensions to the schema.graphql file:
+
+```gql
+# schema.graphql
+
+type Weather {
+  temperature: Int
+  windSpeed: Int
+  windDirection: Int
+  precipitation: String
+  summary: String
+}
+
+extend type Address {
+  currentWeather: Weather
+    @cypher(
+      statement: """
+      WITH 'https://www.7timer.info/bin/civil.php' AS baseURL, this
+      CALL apoc.load.json(
+          baseURL + '?lon=' + this.location.longitude + '&lat=' + this.location.latitude + '&ac=0&unit=metric&output=json')
+          YIELD value WITH value.dataseries[0] as weather
+          RETURN {
+              temperature: weather.temp2m,
+              windSpeed: weather.wind10m.speed,
+              windDirection: weather.wind10m.direction,
+              precipitation: weather.prec_type,
+              summary: weather.weather} AS conditions
+      """
+    )
+}
+```
+
+Now we can include the `currentWeather` field on the `Address` type in our GraphQL queries:
+
+```gql
+{
+  orders {
+    shipTo {
+      address
+      currentWeather {
+        temperature
+        precipitation
+        windSpeed
+        windDirection
+        summary
+      }
+    }
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "orders": [
+      {
+        "shipTo": {
+          "address": "111 E 5th Ave, San Mateo, CA 94401",
+          "currentWeather": {
+            "temperature": 12,
+            "precipitation": "none",
+            "windSpeed": 2,
+            "windDirection": "SW",
+            "summary": "clearday"
+          }
+        }
+      },
+      {
+        "shipTo": {
+          "address": "Nordenskiöldsgatan 24, 211 19 Malmö, Sweden",
+          "currentWeather": {
+            "temperature": 21,
+            "precipitation": "none",
+            "windSpeed": 3,
+            "windDirection": "NW",
+            "summary": "clearday"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
 ## Custom Resolvers
 
 ## EXERCISE: Exploring the @cypher Directive
