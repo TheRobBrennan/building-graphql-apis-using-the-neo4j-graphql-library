@@ -129,6 +129,103 @@ With our initial data loaded let’s dive into adding custom logic to our GraphQ
 
 ## The @cypher GraphQL Schema Directive
 
+Schema directives are GraphQL’s built-in extension mechanism and indicate that some custom logic will occur on the server. Schema directives are not exposed through GraphQL introspection and are therefore invisible to the client. The `@cypher` GraphQL schema directive allows for defining custom logic using Cypher in the GraphQL schema.
+
+**Using the `@cypher` schema directive overrides field resolution and will execute the attached Cypher query to resolve the GraphQL field.**
+
+Refer to the `@cypher` [directive documentation for more information](https://neo4j.com/docs/graphql-manual/current/type-definitions/cypher/).
+
+### Computed Scalar Field
+
+Let’s look at an example of using the `@cypher` directive to define a computed scalar field in our GraphQL schema. Since each order can contain multiple books we need to compute the order "subtotal" or the sum of the price of each book in the order. To calculate the subtotal for an order with orderID "123" in Cypher we would write a query like this:
+
+```cypher
+MATCH (o:Order {orderID: "123"})-[:CONTAINS]->(b:Book)
+RETURN sum(b.price) AS subTotal
+```
+
+With the `@cypher` schema directive in the Neo4j GraphQL Library we can add a field `subTotal` to our `Order` type that includes the logic for traversing to the associated `Book` nodes and summing the price property value of each book. Here we use the `extend` type syntax of GraphQL SDL but we could also add this field directly to the `Order` type definition as well.
+
+Add this extension to the schema.graphql file:
+
+```gql
+# schema.graphql
+
+extend type Order {
+  subTotal: Float
+    @cypher(statement: "MATCH (this)-[:CONTAINS]->(b:Book) RETURN sum(b.price)")
+}
+```
+
+The `@cypher` directive takes a single argument `statement` which is the Cypher statement to be executed to resolve the field. This Cypher statement can reference the `this` variable which is the currently resolved node, in this case the currently resolved `Order` node.
+
+We can now include this `subTotal` field in our GraphQL queries:
+
+```gql
+{
+  orders {
+    books {
+      title
+      price
+    }
+    subTotal
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "orders": [
+      {
+        "books": [
+          {
+            "title": "Graph Algorithms",
+            "price": 37.48
+          }
+        ],
+        "subTotal": 37.48
+      },
+      {
+        "books": [
+          {
+            "title": "Graph Algorithms",
+            "price": 37.48
+          },
+          {
+            "title": "Inspired",
+            "price": 21.38
+          },
+          {
+            "title": "Ross Poldark",
+            "price": 15.52
+          }
+        ],
+        "subTotal": 74.38
+      }
+    ]
+  }
+}
+```
+
+The `@cypher` directive gives us all the power of Cypher, with the ability to express complex traversals, pattern matching, even leveraging Cypher procedures like APOC. Let’s add a slightly more complex `@cypher` directive field to see what is possible. Let’s say that the policy for computing the shipping cost of orders is to charge $0.01 per km from our distribution warehouse. We can define this logic in Cypher, adding a `shippingCost` field to the Order type.
+
+Add this extension to the schema.graphql file:
+
+```gql
+# schema.graphql
+
+extend type Order {
+  shippingCost: Float
+    @cypher(
+      statement: """
+      MATCH (this)-[:SHIPS_TO]->(a:Address)
+      RETURN round(0.01 * distance(a.location, Point({latitude: 40.7128, longitude: -74.0060})) / 1000, 2)
+      """
+    )
+}
+```
+
 ## Custom Resolvers
 
 ## EXERCISE: Exploring the @cypher Directive
