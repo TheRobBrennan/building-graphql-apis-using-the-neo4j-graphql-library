@@ -466,6 +466,45 @@ And we now have a new entry-point to our GraphQL API allowing for full-text sear
 }
 ```
 
+### Custom Mutation Field
+
+Similar to adding Query fields, we can use `@cypher` schema directives to add new Mutation fields.
+
+**This is useful in cases where we have specific logic we’d like to take into account when creating or updating data.**
+
+Here we make use of the **MERGE** [Cypher clause](https://neo4j.com/docs/cypher-manual/current/clauses/merge/) to avoid creating duplicate `Subject` nodes and connecting them to books.
+
+```gql
+# schema.graphql
+
+type Mutation {
+  mergeBookSubjects(subject: String!, bookTitles: [String!]!): Subject
+    @cypher(
+      statement: """
+      MERGE (s:Subject {name: $subject})
+      WITH s
+      UNWIND $bookTitles AS bookTitle
+      MATCH (t:Book {title: bookTitle})
+      MERGE (t)-[:ABOUT]->(s)
+      RETURN s
+      """
+    )
+}
+```
+
+Now perform the update to the graph:
+
+```gql
+mutation {
+  mergeBookSubjects(
+    subject: "Non-fiction"
+    bookTitles: ["Graph Algorithms", "Inspired"]
+  ) {
+    name
+  }
+}
+```
+
 ## Custom Resolvers
 
 ## EXERCISE: Exploring the @cypher Directive
