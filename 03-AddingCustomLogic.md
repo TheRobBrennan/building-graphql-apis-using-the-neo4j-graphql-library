@@ -408,6 +408,64 @@ Now we can include the `currentWeather` field on the `Address` type in our Graph
 }
 ```
 
+### Custom Query Field
+
+We can use the `@cypher` directive on Query fields to compliment the auto-generated Query fields provided by the Neo4j GraphQL Library. Perhaps we want to leverage a [full-text index](https://neo4j.com/docs/cypher-manual/current/administration/indexes-for-full-text-search/) for fuzzy matching for book searches?
+
+First, in Neo4j Browser, create the full-text index:
+
+```cypher
+CALL db.index.fulltext.createNodeIndex("bookIndex", ["Book"],["title", "description"])
+```
+
+To search this full-text index we use the `db.index.fulltext.queryNodes` procedure:
+
+```cypher
+CALL db.index.fulltext.queryNodes("bookIndex", "garph~")
+```
+
+Neo4j full-text indexes use Apache Lucene query syntax - the `~` indicates we want to use "fuzzy matching" taking into account slight misspellings.
+
+Next, add a `bookSearch` field to the Query type in our GraphQL type definitions which requires a `searchString` argument that becomes the full-text search term:
+
+```gql
+# schema.graphql
+
+type Query {
+  bookSearch(searchString: String!): [Book]
+    @cypher(
+      statement: """
+      CALL db.index.fulltext.queryNodes('bookIndex', $searchString+'~')
+      YIELD node RETURN node
+      """
+    )
+}
+```
+
+And we now have a new entry-point to our GraphQL API allowing for full-text search of book titles and descriptions:
+
+```gql
+{
+  bookSearch(searchString: "garph") {
+    title
+    description
+  }
+}
+```
+
+```json
+{
+  "data": {
+    "bookSearch": [
+      {
+        "title": "Graph Algorithms",
+        "description": "Practical Examples in Apache Spark and Neo4j"
+      }
+    ]
+  }
+}
+```
+
 ## Custom Resolvers
 
 ## EXERCISE: Exploring the @cypher Directive
