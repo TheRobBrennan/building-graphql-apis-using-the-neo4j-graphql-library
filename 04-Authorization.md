@@ -303,4 +303,46 @@ Try running this GraphQL query. What results do you get?
 
 ## Check Your Understanding
 
+### Question 1
+
+Decode the following JWT using [jwt.io](https://jwt.io/) or another method and inspect the payload of the token. What is the value of the sub claim on this token?
+
+```sh
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJKZW5ueUNhdDQwNiIsImlhdCI6MTUxNjIzOTAyMn0.rS9h2wbNJDp5mBtj_Of2-I9KnkaMa8xi63nOcFN40bs
+```
+
+Choose the correct answer.
+
+[] EmilEifrem7474
+
+[] BookLover123
+
+[X] JennyCat406
+
+[] BobLoblaw123
+
+### Question 2
+
+Which of the following GraphQL SDL snippets show an authorization rule that states only a user with the role `admin` can create `User` nodes.
+
+Select the correct answer.
+
+[X] extend type User @auth(rules: [{operations: [CREATE], roles: ["admin"]}])
+
+[] extend type User @auth(rules: [{operations: [CREATE], allow: {role: admin}}])
+
+[] CREATE (u:User) WHERE u.role = "admin"
+
+### Question 3
+
+When using the `@cypher` schema directive to define custom logic in the GraphQL schema there is no way to make use of the `@auth` directive to apply authorization rules for fields that use the `@cypher` directive.
+
+Is this statement true or false?
+
+[] True
+
+[X] False
+
 ## Summary
+
+In this lesson, we explored how to add authorization rules to our GraphQL API using the `@auth` schema directive. In the next lesson we explore using the Neo4j GraphQL OGM.
