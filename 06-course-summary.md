@@ -59,4 +59,8 @@ https://stackoverflow.com/tags/neo4j/hot
 
 ## Course feedback
 
+We want your feedback on this course. Please provide your [feedback](https://forms.gle/k6nhzMXiYFyUYUNs7) so we can improve this course.
+
 ## Certificate
+
+Download certificate
