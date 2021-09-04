@@ -63,4 +63,4 @@ We want your feedback on this course. Please provide your [feedback](https://for
 
 ## Certificate
 
-Download certificate
+[Download certificate](https://graphacademy.neo4j.com/training/certificates/150db1aae16f4736c166dfb4bc8dc6024bd65329d3210cb3483b6253fda010ed.pdf)
