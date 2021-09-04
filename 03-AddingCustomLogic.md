@@ -601,6 +601,42 @@ And now we can reference the `estimatedDelivery` field in our GraphQL queries. W
 
 ## EXERCISE: Exploring the @cypher Directive
 
+We saw how powerful the Cypher directive can be for adding custom logic to our GraphQL API. For this exercise first be sure to follow along with the steps above to make use of the `@cypher` schema directive in your GraphQL type definitions. If you run into any issues you can refer to [this Codesandbox](https://codesandbox.io/s/github/johnymontana/training-v3/tree/master/modules/graphql-apis/supplemental/code/03-graphql-apis-custom-logic/end?file=/.env) with all the code we added in this lesson.
+
+For this exercise you will be adding a `similar` field to the `Book` type which will return similar books. How you determine similarity is up to you. Perhaps consider order co-occurence (books purchased together) or user reviews? First, think about how to query for similar books using Cypher, testing in Neo4j Browser. Then add the query as a `@cypher` directive field to the `Book` type. Advanced users may wish to explore the [Graph Data Science Library](https://neo4j.com/docs/graph-data-science/current) to leverage graph algorithms. For example, here’s how we can use the [Jaccard Similarity function](https://neo4j.com/docs/graph-data-science/current/alpha-algorithms/jaccard/) to find similar books using book subjects:
+
+```gql
+# schema.graphql
+
+extend type Book {
+  similar: [Book]
+    @cypher(
+      statement: """
+      MATCH (this)-[:ABOUT]->(s:Subject)
+      WITH this, COLLECT(id(s)) AS s1
+      MATCH (b:Book)-[:ABOUT]->(s:Subject) WHERE b <> this
+      WITH this, b, s1, COLLECT(id(s)) AS s2
+      WITH b, gds.alpha.similarity.jaccard(s2, s2) AS jaccard
+      ORDER BY jaccard DESC
+      RETURN b LIMIT 1
+      """
+    )
+}
+```
+
+Your solution will enable clients of the GraphQL API to include the `similar` field in the selection set and view similar books:
+
+```gql
+{
+  books(where: { title: "Graph Algorithms" }) {
+    title
+    similar {
+      title
+    }
+  }
+}
+```
+
 ## Check Your Understanding
 
 ## Summary
