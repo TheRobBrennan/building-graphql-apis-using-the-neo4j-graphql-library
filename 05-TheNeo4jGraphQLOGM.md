@@ -148,4 +148,36 @@ See [this Codesandbox](https://codesandbox.io/s/github/johnymontana/training-v3/
 
 ## Check Your Understanding
 
+### Question 1
+
+The Neo4j GraphQL OGM uses GraphQL type definitions to define models.
+
+Is this statement true or false?
+
+[X] True
+
+[] False
+
+### Question 2
+
+When querying using the Neo4j GraphQL OGM a selection set can be provided to indicate specific fields to be returned.
+
+Is this statement true or false?
+
+[X] True
+
+[] False
+
+### Question 3
+
+The Neo4j GraphQL OGM can be used outside of GraphQL APIs, such as in a REST API implementation.
+
+Is this statement true or false?
+
+[X] True
+
+[] False
+
 ## Summary
+
+In this lesson, we introduced the Neo4j GraphQL OGM for querying Neo4j programmatically.
