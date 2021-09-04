@@ -139,6 +139,13 @@ Create, update, and delete operations are also available using the Neo4j GraphQL
 
 ## EXERCISE: Neo4j GraphQL OGM
 
+Let’s consider a hands-on example of using the Neo4j GraphQL OGM outside of a GraphQL API. Launch [this Codesandbox](https://codesandbox.io/s/github/johnymontana/training-v3/tree/master/modules/graphql-apis/supplemental/code/05-graphql-apis-ogm/begin?file=/.env) which is a simple node script that runs a report to log all orders.
+
+- Update the `.env` file with the connection credentials for your Neo4j Sandbox instance.
+- Modify the script to include book titles and the price of each book in each order.
+
+See [this Codesandbox](https://codesandbox.io/s/github/johnymontana/training-v3/tree/master/modules/graphql-apis/supplemental/code/05-graphql-apis-ogm/end?file=/.env) for the solution.
+
 ## Check Your Understanding
 
 ## Summary
