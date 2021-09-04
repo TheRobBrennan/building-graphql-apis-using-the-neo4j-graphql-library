@@ -18,6 +18,27 @@ Refer to the [Auth section of the Neo4j GraphQL Library documentation](https://n
 
 ## Setup
 
+To enable authorization with the Neo4j GraphQL Library we need to specify the JWT signing secret used to decode and validate tokens. For this lesson we will use the following JWT secret to validate our tokens:
+
+```sh
+dFt8QaYykR6PauvxcyKVXKauxvQuWQTc
+```
+
+When instantiating `Neo4jGraphQL` pass a config object that includes the JWT secret. For example:
+
+```js
+const neoSchema = new Neo4jGraphQL({
+  typeDefs,
+  config: {
+    jwt: {
+      secret: "dFt8QaYykR6PauvxcyKVXKauxvQuWQTc",
+    },
+  },
+})
+```
+
+This step has been completed in the initial Codesandbox we’ll use for this lesson. Open [the Codesandbox using this link](https://codesandbox.io/s/github/johnymontana/training-v3/tree/master/modules/graphql-apis/supplemental/code/04-graphql-apis-auth/begin?file=/.env), again forking and editing the `.env` file to add the connection credentials for your Neo4j Sandbox instance. You’ll notice we’ve included an additional environment variable to keep track of our JWT secret.
+
 ## JSON Web Token (JWT)
 
 ## Adding Authorization Rules
