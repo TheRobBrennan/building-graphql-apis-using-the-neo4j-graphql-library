@@ -639,4 +639,44 @@ Your solution will enable clients of the GraphQL API to include the `similar` fi
 
 ## Check Your Understanding
 
+### Question 1
+
+Schema directives are used in GraphQL type definitions to indicate custom server-side logic. In the Neo4j GraphQL Library which GraphQL schema directive is used to define custom logic using the Cypher query language?
+
+Select the correct answer.
+
+[] @gql
+
+[X] @cypher
+
+[] @gds
+
+[] @ignore
+
+[] @relationship
+
+### Question 2
+
+Which of the following GraphQL SDL snippets show the proper usage of the `@cypher` schema directive to compute the subtotal for an order?
+
+Select the correct answer.
+
+[X] subTotal: Float @cypher(statement:"MATCH (this)-[:CONTAINS]→(b:Book) RETURN sum(b.price)")
+
+[] MATCH (o:Order)-[:CONTAINS]→(b:Book) RETURN b ORDER BY p.price DESC
+
+[] { orders { subTotal } }
+
+### Question 3
+
+The Cypher query used in a `@cypher` schema directive cannot use Cypher procedures such as APOC, the Graph Data Science Library, or other built-in procedures.
+
+Is this statement true or false?
+
+[] True
+
+[X] False
+
 ## Summary
+
+In this lesson, we explored two methods for adding custom logic to our GraphQL API: the `@cypher` schema directive and custom resolvers. In the next lesson we address adding authorization rules to our API using the `@auth` directive and JSON Web Tokens (JWTs).
