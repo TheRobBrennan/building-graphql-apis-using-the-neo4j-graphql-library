@@ -295,6 +295,12 @@ Try running this GraphQL query. What results do you get?
 
 ## EXERCISE: Adding a Customer & Order
 
+1. Update the `schema.graphql` file adding in the authorization rules we covered above. If you get stuck [this Codesandbox](https://codesandbox.io/s/github/johnymontana/training-v3/tree/master/modules/graphql-apis/supplemental/code/04-graphql-apis-auth/end?file=/.env) includes all the code from this lesson.
+2. Using the admin token, create a new user.
+3. Next, create a JWT token for this user using jwt.io. Use this token to create an order for this user. Be sure to include some books in the order!
+4. Next, add a review for the book purchased by this user.
+5. Finally, write a query to view the customer’s details, including their order history and their reviews.
+
 ## Check Your Understanding
 
 ## Summary
